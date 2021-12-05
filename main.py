@@ -3,7 +3,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import ctypes
-from selenium.webdriver.support import expected_conditions as EC
+import pandas as pd
 
 
 serv = Service("C:/Users/nirga/Downloads/chromedriver_win32/chromedriver.exe")
@@ -28,10 +28,46 @@ floors = driver.find_elements(By.CSS_SELECTOR, "div.feeditem div.middle_col .flo
 areas = driver.find_elements(By.CSS_SELECTOR, "div.feeditem div.middle_col .SquareMeter-item .val")
 prices = driver.find_elements(By.CSS_SELECTOR, "div.feeditem div.left_col .price")
 merchants = driver.find_elements(By.CSS_SELECTOR, "div.feeditem div.left_col .merchant_name")
-print(addresses[30].text)
-# print(type_neighborhood_town[39].text)
-# print(rooms[39].text)
-# print(floors[39].text)
-# print(areas[39].text)
-# print(prices[39].text)
-# print(merchants[39].text)
+asset_types = []
+neighborhoods = []
+towns = []
+
+for item in type_neighborhood_town:
+    split_item = item.text.split(",")
+    if len(split_item) == 1:
+        asset_types.append(split_item[0])
+        neighborhoods.append("NA")
+        towns.append("NA")
+    elif len(split_item) == 2:
+        asset_types.append(split_item[0])
+        neighborhoods.append("NA")
+        towns.append(split_item[1])
+    elif len(split_item) == 3:
+        asset_types.append(split_item[0])
+        neighborhoods.append(split_item[2])
+        towns.append(split_item[1])
+
+
+def concert_lists_of_webriver_to_text(webdriver_list):
+    new_list_of_text = []
+    for item in webdriver_list:
+        new_list_of_text.append(item.text)
+    return new_list_of_text
+
+column_dict = {
+    "address": concert_lists_of_webriver_to_text(addresses),
+    "asset_type": asset_types,
+    "neighborhood": neighborhoods,
+    "town": towns,
+    "rooms": concert_lists_of_webriver_to_text(rooms),
+    "floors": concert_lists_of_webriver_to_text(floors),
+    "square-meter": concert_lists_of_webriver_to_text(areas),
+    "price": concert_lists_of_webriver_to_text(prices),
+    "merchant": concert_lists_of_webriver_to_text(merchants)
+}
+
+df = pd.DataFrame.from_dict(column_dict, orient='index')
+df = df.transpose()
+df.to_csv("new_tsv_file_1.tsv", sep="\t")
+
+print(df.head())
