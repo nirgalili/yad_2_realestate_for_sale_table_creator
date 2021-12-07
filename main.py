@@ -1,21 +1,24 @@
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 import ctypes
 import pandas as pd
+import time
 
-serv = Service("C:/Users/nirga/Downloads/chromedriver_win32/chromedriver.exe")
 
-driver = webdriver.Chrome(service=serv)
+driver = webdriver.Firefox()
 
 url = "https://www.yad2.co.il/realestate/forsale"
 
 driver.get(url)
 
-text = 'Press OK after narrowing down search results.'
+text = 'Press OK after narrowing down search results to produce csv file.'
 title = 'Pop Up'
 
 answer = ctypes.windll.user32.MessageBoxExW(0, text, title, 0x40000)
+
+
+new_url = driver.current_url
+print(type(new_url))
 
 addresses = driver.find_elements(By.CSS_SELECTOR, "div.feeditem div.right_col div.rows .title")
 type_neighborhood_town = driver.find_elements(By.CSS_SELECTOR, "div.feeditem div.right_col div.rows .subtitle") # sometimes there is no neighborhood. only type and town
@@ -24,9 +27,12 @@ floors = driver.find_elements(By.CSS_SELECTOR, "div.feeditem div.middle_col .flo
 areas = driver.find_elements(By.CSS_SELECTOR, "div.feeditem div.middle_col .SquareMeter-item .val")
 prices = driver.find_elements(By.CSS_SELECTOR, "div.feeditem div.left_col .price")
 merchants = driver.find_elements(By.CSS_SELECTOR, "div.feeditem div.left_col .merchant_name")
+# new_tabs_buttons = driver.find_elements(By.CSS_SELECTOR, "div.feeditem div.left_col .y2i_new_tab")
 asset_types = []
 neighborhoods = []
 towns = []
+
+# print(new_tabs_buttons)
 
 for item in type_neighborhood_town:
     split_item = item.text.split(",")
@@ -63,9 +69,12 @@ column_dict = {
     "merchant": concert_lists_of_webriver_to_text(merchants)
 }
 
+
 df = pd.DataFrame.from_dict(column_dict, orient='index')
 df = df.transpose()
-df.to_csv("new_csv_file.csv", index=False, encoding='utf-8-sig')
+df2 = {"link": new_url}
+df = df.append(df2, ignore_index=True)
+df.to_csv("new_file.csv", index=False, encoding='utf-8-sig')
 
 print(df.head())
 
